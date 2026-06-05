@@ -12,11 +12,24 @@
         .section.active { display: block; }
         .card { border: none; box-shadow: 0 2px 8px rgba(0,0,0,.08); margin-top: 15px; padding: 15px; }
         .label { font-weight: bold; color: #0d6efd; }
-        /* Estilo do Rodapé */
         .footer { padding: 20px; text-align: center; background: #fff; border-top: 1px solid #ddd; margin-top: 20px; }
+        
+        /* Estilo da Splash Screen */
+        .splash {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: #ffffff; display: flex; justify-content: center;
+            align-items: center; z-index: 9999; transition: opacity 0.5s ease;
+        }
     </style>
 </head>
 <body>
+
+<div class="splash" id="splash" style="flex-direction: column;">
+    <p style="font-family: sans-serif; color: #555; margin-bottom: 10px; font-weight: bold;">
+        Carregando o Portal...
+    </p>
+    <img src="logo.png" alt="Logo" style="max-width: 80%; height: auto;">
+</div>
 
 <nav class="navbar navbar-dark">
     <div class="container">
@@ -65,35 +78,16 @@
     </div>
 </div>
 
-<footer class="footer" id="ads-container">
-    <script>
-        function loadAds() {
-            const container = document.getElementById('ads-container');
-            container.innerHTML = '';
-            
-            const atOptions = {
-                'key' : '5069ad86b9e8e9fde3e56a361568f7fd',
-                'format' : 'iframe',
-                'height' : 50,
-                'width' : 320,
-                'params' : {}
-            };
-            
-            const configScript = document.createElement('script');
-            configScript.text = `atOptions = ${JSON.stringify(atOptions)};`;
-            container.appendChild(configScript);
-            
-            const invokeScript = document.createElement('script');
-            invokeScript.src = 'https://www.highperformanceformat.com/5069ad86b9e8e9fde3e56a361568f7fd/invoke.js';
-            container.appendChild(invokeScript);
-        }
-
-        loadAds();
-        setInterval(loadAds, 60000);
-    </script>
-</footer>
+<footer class="footer" id="ads-container"></footer>
 
 <script>
+    // Remover Splash após 7 segundos
+    setTimeout(() => {
+        const splash = document.getElementById('splash');
+        splash.style.opacity = '0';
+        setTimeout(() => splash.style.display = 'none', 500);
+    }, 7000);
+
     function showSection(id) {
         document.querySelectorAll('.section').forEach(el => el.classList.remove('active'));
         document.getElementById(id).classList.add('active');
@@ -101,9 +95,10 @@
 
     async function consultarCEP() {
         const cep = document.getElementById('cepInput').value.replace(/\D/g, '');
+        if(cep.length !== 8) { alert("CEP inválido"); return; }
         const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const d = await res.json();
-        const obj = { 'CEP': d.cep, 'LOGRADOURO': d.logradouro, 'COMPLEMENTO': d.complemento, 'BAIRRO': d.bairro, 'LOCALIDADE': d.localidade, 'UF': d.uf, 'REGIAO': d.regiao };
+        const obj = { 'CEP': d.cep, 'LOGRADOURO': d.logradouro, 'BAIRRO': d.bairro, 'CIDADE': d.localidade, 'UF': d.uf };
         document.getElementById('cepRes').innerHTML = `<div class="card">${Object.entries(obj).map(([k,v])=>`<div><span class="label">${k}:</span> ${v||'Não informado'}</div>`).join('')}</div>`;
     }
 
@@ -152,8 +147,23 @@
     async function listarBancos() {
         const res = await fetch('https://brasilapi.com.br/api/banks/v1');
         const d = await res.json();
-        document.getElementById("bancosRes").innerHTML = `<div class="card"><ul>${d.slice(0, 50).map(b=>`<li>${b.code} - ${b.name}</li>`).join('')}</ul></div>`;
+        document.getElementById("bancosRes").innerHTML = `<div class="card"><ul>${d.slice(0, 20).map(b=>`<li>${b.code || '-'} - ${b.name}</li>`).join('')}</ul></div>`;
     }
+
+    // Função de Ads mantida
+    function loadAds() {
+        const container = document.getElementById('ads-container');
+        container.innerHTML = '';
+        const atOptions = { 'key' : '5069ad86b9e8e9fde3e56a361568f7fd', 'format' : 'iframe', 'height' : 50, 'width' : 320, 'params' : {} };
+        const configScript = document.createElement('script');
+        configScript.text = `atOptions = ${JSON.stringify(atOptions)};`;
+        container.appendChild(configScript);
+        const invokeScript = document.createElement('script');
+        invokeScript.src = 'https://www.highperformanceformat.com/5069ad86b9e8e9fde3e56a361568f7fd/invoke.js';
+        container.appendChild(invokeScript);
+    }
+    loadAds();
+    setInterval(loadAds, 60000);
 </script>
 </body>
 </html>
