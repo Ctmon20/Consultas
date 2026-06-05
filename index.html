@@ -107,11 +107,20 @@
 
     async function consultarCEP() {
         const cep = document.getElementById('cepInput').value.replace(/\D/g, '');
-        if(cep.length !== 8) { alert("CEP inválido"); return; }
         const res = await fetch(`https://viacep.com.br/ws/${cep}/json/`);
         const d = await res.json();
+        
+        const resDiv = document.getElementById('cepRes');
+        
+        // Verifica se a API retornou erro
+        if (d.erro) {
+            resDiv.innerHTML = `<div class="card" style="color: red; font-weight: bold;">CEP não encontrado! Verifique o número.</div>`;
+            return;
+        }
+
+        // Se deu certo, exibe os dados
         const obj = { 'CEP': d.cep, 'LOGRADOURO': d.logradouro, 'BAIRRO': d.bairro, 'CIDADE': d.localidade, 'UF': d.uf };
-        document.getElementById('cepRes').innerHTML = `<div class="card">${Object.entries(obj).map(([k,v])=>`<div><span class="label">${k}:</span> ${v||'Não informado'}</div>`).join('')}</div>`;
+        resDiv.innerHTML = `<div class="card">${Object.entries(obj).map(([k,v])=>`<div><span class="label">${k}:</span> ${v||'Não informado'}</div>`).join('')}</div>`;
     }
 
     async function consultarCNPJ() {
