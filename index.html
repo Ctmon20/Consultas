@@ -125,10 +125,37 @@
 
     async function consultarCNPJ() {
         const cnpj = document.getElementById('cnpjInput').value.replace(/\D/g, '');
-        const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
-        const d = await res.json();
-        const obj = { 'UF': d.uf, 'CEP': d.cep, 'BAIRRO': d.bairro, 'MUNICIPIO': d.municipio, 'LOGRADOURO': d.logradouro, 'ATIVIDADE': d.cnae_fiscal_descricao };
-        document.getElementById('cnpjRes').innerHTML = `<div class="card">${Object.entries(obj).map(([k,v])=>`<div><span class="label">${k}:</span> ${v||'Não informado'}</div>`).join('')}</div>`;
+        const resDiv = document.getElementById('cnpjRes');
+
+        if (cnpj.length !== 14) {
+            resDiv.innerHTML = `<div class="card" style="color: orange; font-weight: bold;">CNPJ deve conter 14 dígitos.</div>`;
+            return;
+        }
+
+        try {
+            const res = await fetch(`https://brasilapi.com.br/api/cnpj/v1/${cnpj}`);
+            
+            // Verifica se a resposta foi bem sucedida
+            if (!res.ok) {
+                resDiv.innerHTML = `<div class="card" style="color: red; font-weight: bold;">CNPJ não encontrado ou erro na consulta!</div>`;
+                return;
+            }
+
+            const d = await res.json();
+            const obj = { 
+                'RAZÃO SOCIAL': d.razao_social, 
+                'UF': d.uf, 
+                'CEP': d.cep, 
+                'LOGRADOURO': d.logradouro, 
+                'MUNICÍPIO': d.municipio, 
+                'ATIVIDADE': d.cnae_fiscal_descricao 
+            };
+            
+            resDiv.innerHTML = `<div class="card">${Object.entries(obj).map(([k,v])=>`<div><span class="label">${k}:</span> ${v||'Não informado'}</div>`).join('')}</div>`;
+            
+        } catch (error) {
+            resDiv.innerHTML = `<div class="card" style="color: red; font-weight: bold;">Erro ao conectar com o servidor. Tente novamente.</div>`;
+        }
     }
 
     async function carregarMarcas() {
